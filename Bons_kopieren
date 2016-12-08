@@ -1,0 +1,82 @@
+REM  *****  BASIC  *****
+
+Sub Copy_Purchases
+ 
+oDoc = ThisComponent
+oSheetTarget=oDoc.sheets(0)
+
+'Quelldatei im gleichen Verzeichnis wie Quelldatei  
+sFolderUrl = replace(thiscomponent.url,thiscomponent.title,"")
+
+DIM FileProperties()   AS New com.sun.star.beans.PropertyValue
+
+GesamtzahlBonsBisher = 0
+
+For KasseNummer = 1 To 8 
+
+
+  oBonnummberCell= oSheetTarget.getCellByPosition(11,KasseNummer)  ' lese Anzahl Bons je Kasse aus Spalte L (=11)
+  if oBonnummberCell.Type = com.sun.star.table.CellContentType.EMPTY then 
+    AnzahlBons = 0
+  else
+    AnzahlBons = oBonnummberCell.Value
+ 
+
+    For Bonnummer = 1 To AnzahlBons
+
+      sFileName = "K" & KasseNummer & "_" & Bonnummer & ".ods"
+
+      'Quelle öffnen
+      URLSource=converttourl(sFolderUrl & sFileName)
+      oDocSource = StarDesktop.loadComponentFromURL(URLSource, "blank", 0, FileProperties())
+      oSheetSource=odocSource.sheets(0)
+  
+      ' Zeilen mit Inhalt kopieren
+      With oSheetSource
+       For Zeile = 6 To 55 'Beginn bei 0, d.h. Zeile 7 bis 56
+        
+          ' Schreibe in die Spalte A (=0) die Kassen-Nummer
+          oCellTarget= oSheetTarget.getCellByPosition(0, (GesamtzahlBonsBisher * 50) + Zeile)
+          ocellTarget.Value = KasseNummer
+          
+          ' Schreibe in die Spalte B (=1) die Bon-Nummer
+          oCellTarget= oSheetTarget.getCellByPosition(1, (GesamtzahlBonsBisher * 50) + Zeile)
+          ocellTarget.Value = Bonnummer
+          
+          ' Kopiere Bon-Inhalt von Quelldatei
+          For Spalte = 0 To 5 'A-F
+           oCellSource= oSheetSource.getCellByPosition(Spalte,Zeile)  
+           oCellTarget= oSheetTarget.getCellByPosition(Spalte+2, (GesamtzahlBonsBisher * 50) + Zeile) ' max 50 Einträge pro Bon
+           
+           ' Spalte 0 und 4 sind Text,1-3 Zahlen aus Strings, 5 Zahl aus Zahl
+           Select Case Spalte
+            Case 0, 4  
+              ocellTarget.string=oCellSource.string
+            Case 1, 2, 3  
+              ocellTarget.Value=oCellSource.string 
+            Case 5
+              if oCellSource.value < 0 then    'für negative Beträge (=Rückgaben) wird als Auszahlung eine Null eingesetzt
+               ocellTarget.Value=0
+              else  ' Falls ein positiver Betrag dasteht (z.B. geänderter Preis), dann übernehmen
+               ocellTarget.Value=oCellSource.value 
+              endif 
+           End Select
+          Next   
+          
+       Next
+      End With
+  
+      'Close Source File
+      oDocSource.close(True)
+
+      GesamtzahlBonsBisher = GesamtzahlBonsBisher + 1
+ 
+    Next 'For Bonnummer = 1 To AnzahlBons
+
+  endif ' if oBonnummberCell.Type = com.sun.star.table.CellContentType.EMPTY
+
+Next   ' For KasseNummer = 1 To 8
+
+
+
+End Sub
