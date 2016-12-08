@@ -1,0 +1,11 @@
+REM  *****  BASIC  *****
+
+Sub BonKopie
+odoc = thisComponent
+dim printProp(1) as new com.sun.star.beans.PropertyValue
+printProp(0).name = "Wait"
+printProp(0).Value = true
+printProp(1).name = "CopyCount"
+printProp(1).Value = 1
+odoc.print(printProp())
+End Sub
