@@ -1,0 +1,65 @@
+REM  *****  BASIC  *****
+
+Sub S_save_and_print
+odoc = thisComponent
+
+' leere Zeilen ausblenden
+Dim zi
+With thisComponent.Sheets(0)
+   For zi = 6 To 55 'zeile 7 bis 56
+      If .getcellbyposition(5, zi).value = 0 Then '0=A,1=B,2=C,...
+         .Rows(zi).isvisible = False
+      Else
+         .Rows(zi).isvisible = True
+      End If
+   Next
+End With
+
+
+rem Gehe zur ersten Eingabezelle -----------------------------------------
+rem ----------------------------------------------------------------------
+rem define variables
+dim document   as object
+dim dispatcher as object
+rem ----------------------------------------------------------------------
+rem get access to the document
+document   = ThisComponent.CurrentController.Frame
+dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+rem ----------------------------------------------------------------------
+dim args4(0) as new com.sun.star.beans.PropertyValue
+args4(0).Name = "ToPoint"
+args4(0).Value = "$A$7"
+dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args4())
+
+' Bonsumme erhöhen
+oSheetSource=oDoc.sheets(0)
+oCellSource= oSheetSource.getCellByPosition(9,25)  'Spalte j, Zeile 26
+oCellAdd= oSheetSource.getCellByPosition(9,1)  'Spalte j, Zeile 2
+oCellSource.value = oCellSource.value + oCellAdd.value
+
+
+' Kopie speichern
+sFolderUrl = replace(thiscomponent.url,thiscomponent.title,"")
+osheet = odoc.currentcontroller.activesheet
+ocell = osheet.getcellrangebyname("F3")
+ocell2 = osheet.getcellrangebyname("D3")
+sFileName = "K" & ocell2.string & "_" & ocell.string & ".ods"
+sOutputUrl = converttourl(sFolderUrl & sFileName)
+dim array()
+odoc.storeToURL(sOutputUrl,array)
+
+' ausdrucken
+dim printProp(1) as new com.sun.star.beans.PropertyValue
+printProp(0).name = "Wait"
+printProp(0).Value = true
+printProp(1).name = "CopyCount"
+printProp(1).Value = 1
+odoc.print(printProp())
+
+' gehe zu "Gegeben" 
+dim args5(0) as new com.sun.star.beans.PropertyValue
+args5(0).Name = "ToPoint"
+args5(0).Value = "$J$3"
+dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args5())
+
+End Sub
