@@ -1,0 +1,155 @@
+REM  *****  BASIC  *****
+
+Sub Print_all_Receipts
+
+rem ----------------------------------------------------------------------
+rem define variables
+dim document   as object
+dim dispatcher as object
+dim args1(0) as new com.sun.star.beans.PropertyValue
+dim args2(0) as new com.sun.star.beans.PropertyValue
+dim args3(0) as new com.sun.star.beans.PropertyValue
+dim args4(0) as new com.sun.star.beans.PropertyValue
+
+  odoc = thisComponent
+  oSheetSource=oDoc.sheets(0)
+  oSheetTarget=oDoc.sheets(1)
+  dim printProp(1) as new com.sun.star.beans.PropertyValue
+  
+  ListenGesamt = oSheetSource.getCellByPosition(11,10).value ' Spalte L (=11), Zeile 11 (=10)
+  AnzahlBons = oSheetSource.getCellByPosition(11,9).value ' Spalte L (=11), Zeile 10 (=9)
+  LetzeZeile = 6 + (AnzahlBons * 50)   'Beginn in Zeile 7 + 50 Zeilen je Bon
+
+
+rem---------------------------------------------------------------------------
+
+  For ListeNummer = 190 To ListenGesamt
+  
+    'MsgBox "Liste: " & ListeNummer
+    
+    'Status-Ausgabe
+    oCellTarget= oSheetSource.getCellByPosition(11,26)  ' L-27
+    ocellTarget.Value = ListeNummer
+    
+    
+    For ArtikelNr = 1 To 50
+    
+       oCellTarget= oSheetTarget.getCellByPosition(5,6+ArtikelNummer)  'Spalte F
+       ocellTarget.Value = 0
+   
+       'Status-Ausgabe
+       oCellTarget= oSheetSource.getCellByPosition(11,27)  ' L-28
+       ocellTarget.Value =  ArtikelNr
+   
+   
+       For Zeile = 6 To LetzeZeile
+   
+         ArtikelListenNummer = oSheetSource.getCellByPosition(4,Zeile).value
+         if ArtikelListenNummer = ListeNummer Then
+   
+           ArtikelNummer = oSheetSource.getCellByPosition(5,Zeile).value
+           
+           ' kopiere Zeileninhalt
+           For Spalte = 4 To 7 'E - H
+              
+                oCellSource= oSheetSource.getCellByPosition(Spalte,Zeile)
+                oCellTarget= oSheetTarget.getCellByPosition(Spalte-3,5+ArtikelNummer)
+                ' Spalten E-F sind Zahlen, G ist String, H ist Zahl
+                Select Case Spalte
+                 Case 4 , 5, 7
+                  ocellTarget.Value=oCellSource.value 
+                 Case 6  
+                  ocellTarget.string=oCellSource.string 
+                End Select
+   
+           Next 'Spalte = 4 To 7 'E - H
+   
+         endif
+   
+       Next 'Zeile = 6 To LetzeZeile
+   
+    Next 'ArtikelNr = 1 To 50
+   
+      
+    
+' Tabelle wechseln
+    
+rem ----------------------------------------------------------------------
+args1(0).Name = "Nr"
+args1(0).Value = 2
+document   = ThisComponent.CurrentController.Frame
+dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+dispatcher.executeDispatch(document, ".uno:JumpToTable", "", 0, args1())
+
+
+' leere Zeilen ausblenden
+  
+   With oSheetTarget
+     For zi = 6 To 55 'zeile 7 bis 56
+      If .getcellbyposition(4, zi).value = 0 Then '0=A,1=B,2=C,...
+         .Rows(zi).isvisible = False
+      Else
+         .Rows(zi).isvisible = True
+      End If
+     Next
+    End With
+
+
+' Bon ausdrucken 
+'MsgBox "Bon druckbereit"
+
+printProp(0).name = "Wait"
+printProp(0).Value = true
+printProp(1).name = "CopyCount"
+printProp(1).Value = 2
+
+Bonsumme = oSheetTarget.getCellByPosition(4,57).value  'E-58
+if Bonsumme = 0 Then
+  ' do nothing
+else
+  odoc.print(printProp())
+endif
+
+' Kopie speichern
+sFolderUrl = replace(thiscomponent.url,thiscomponent.title,"")
+osheet = odoc.currentcontroller.activesheet
+ocell = osheet.getcellrangebyname("B7")
+sFileName = "A" & ocell.string & ".ods"
+sOutputUrl = converttourl(sFolderUrl & sFileName)
+dim array()
+odoc.storeToURL(sOutputUrl,array)
+
+' ausgeblendete Zeilen anzeigen
+    myDoc = thisComponent
+	mySheet = myDoc.sheets(1)
+	range = mySheet.getCellRangebyPosition(0,6,0,56)
+	myrows = range.getRows()
+	myrows.isVisible = true
+
+
+' Liste löschen
+document   = ThisComponent.CurrentController.Frame
+dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+rem ----------------------------------------------------------------------
+args2(0).Name = "ToPoint"
+args2(0).Value = "$B$7:$F$56"
+dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args2())
+rem ----------------------------------------------------------------------
+args3(0).Name = "Flags"
+args3(0).Value = "SVDFN"
+dispatcher.executeDispatch(document, ".uno:Delete", "", 0, args3())
+rem ----------------------------------------------------------------------
+args4(0).Name = "Nr"
+args4(0).Value = 1
+dispatcher.executeDispatch(document, ".uno:JumpToTable", "", 0, args4())
+document   = ThisComponent.CurrentController.Frame
+dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+
+  Next 'For ListeNummer = 1 To ListenGesamt
+
+
+End Sub
+
+
+
+
