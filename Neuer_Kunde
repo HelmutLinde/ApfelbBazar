@@ -1,0 +1,72 @@
+REM  *****  BASIC  *****
+
+sub Neuer_Kunde
+
+' ausgeblendete Zeilen anzeigen
+    myDoc = thisComponent
+	mySheet = myDoc.sheets(0)
+	range = mySheet.getCellRangebyPosition(0,6,0,56)
+	myrows = range.getRows()
+	myrows.isVisible = true
+
+
+rem ----------------------------------------------------------------------
+rem define variables
+dim document   as object
+dim dispatcher as object
+rem ----------------------------------------------------------------------
+rem get access to the document
+document   = ThisComponent.CurrentController.Frame
+dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+
+' "Gegeben" löschen
+rem ----------------------------------------------------------------------
+dim args5(0) as new com.sun.star.beans.PropertyValue
+args5(0).Name = "ToPoint"
+args5(0).Value = "$J$3"
+dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args5())
+args5(0).Name = "Flags"
+args5(0).Value = "SVDFN"
+dispatcher.executeDispatch(document, ".uno:Delete", "", 0, args5())
+
+'Bon leeren
+rem ----------------------------------------------------------------------
+dim args1(0) as new com.sun.star.beans.PropertyValue
+args1(0).Name = "ToPoint"
+args1(0).Value = "$A$70:$F$70"
+dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args1())
+rem ----------------------------------------------------------------------
+dispatcher.executeDispatch(document, ".uno:Copy", "", 0, Array())
+rem ----------------------------------------------------------------------
+dim args2(0) as new com.sun.star.beans.PropertyValue
+args2(0).Name = "ToPoint"
+args2(0).Value = "$A$7:$F$56"
+dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args2())
+rem ----------------------------------------------------------------------
+dispatcher.executeDispatch(document, ".uno:Paste", "", 0, Array())
+
+
+'Gehe Zu Bonnummer
+dim args3(0) as new com.sun.star.beans.PropertyValue
+args3(0).Name = "ToPoint"
+args3(0).Value = "$F$3"
+dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args3())
+
+
+' Erhöhe Wert in Zelle "Bonnummer" um 1
+oCell=ThisComponent.CurrentSelection
+if oCell.Type = com.sun.star.table.CellContentType.EMPTY then 
+oCell.Value=1
+else
+oCell.Value=oCell.Value+1
+endif
+
+rem Gehe zur ersten Eingabezelle -----------------------------------------
+dim args4(0) as new com.sun.star.beans.PropertyValue
+args4(0).Name = "ToPoint"
+args4(0).Value = "$A$7"
+dispatcher.executeDispatch(document, ".uno:GoToCell", "", 0, args4())
+
+
+
+end sub
