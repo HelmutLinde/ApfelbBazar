@@ -1,0 +1,348 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <title>Apfelbäumchen-Bazar 2016</title>
+    <style type="text/css">
+
+    @import url('http://fonts.googleapis.com/css?family=Open+Sans');
+    body { font-family: 'Open Sans'; }
+    #submitdiv_above, #submitdiv_below, #personal {display:none;}
+
+    </style>
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript" src="jquery.alphanum.js"></script>
+    <script type="text/javascript" src="jquery-number/jquery.number.min.js"></script>
+    <script>
+    var userId;
+
+    function padZeros(numberVal, zeros) {
+        var numberStr = numberVal.toString();
+        var digitDiff = zeros - numberStr.length;
+
+        if (digitDiff>0) {
+            return Array(digitDiff+1).join("0");
+        } else {
+            return numberStr;
+        }
+    }
+
+    function article (i) {
+
+        var info = getInfoByBarcode(i);
+        if (info.indexOf('#') === -1) {
+            var artikel = '';
+            var groesse =  'sonstiges';
+            var preis = '0.0';
+            var farbe = '';
+        } else {
+            info = info.split('#')
+            var artikel = unescape(info[0]);
+            var groesse =  info[1];
+            var preis = info[2].replace(".", ",");
+            var farbe = unescape(info[3]);
+        }
+
+
+        var groesseStr = "";
+        for(j=50; j<=176; j+=6) {
+            groesseStr += '  <option' + ((groesse == j.toString()) ? ' selected="selected"' : '') + '>' + j.toString() + '</option>';
+        }
+
+
+
+        return '<span class="onearticle">'+
+            'Barcodenr. ' + ' <input type="text" name="barcode" value="' + i.toString() +  '" disabled>'+
+            'Artikelbezeichnung <input maxlength="40" type="text" name="artikel" value="' + artikel + '">'+
+            'Farbe <input type="text" name="farbe" value="' + farbe + '">'+
+            'Größe '+
+            '<select name="groesse" size="1">'+
+            '  <option' + ((groesse == 'sonstiges') ? ' selected="selected"' : '') + '>sonstiges</option>'+
+            groesseStr + 
+            /*'  <option' + ((groesse == '50') ? ' selected="selected"' : '') + '>50</option>'+
+            '  <option' + ((groesse == '56') ? ' selected="selected"' : '') + '>56</option>'+
+            '  <option' + ((groesse == '62') ? ' selected="selected"' : '') + '>62</option>'+
+            '  <option' + ((groesse == '68') ? ' selected="selected"' : '') + '>68</option>'+
+            '  <option' + ((groesse == '74') ? ' selected="selected"' : '') + '>74</option>'+*/
+            '</select>'+
+            'Preis (€) <input type="text" name="preis" value="' + preis + '"></span><br/>';
+    };
+
+    function addArticle(i) {
+        $( "#articles" ).append( article (i) );
+    };
+
+    function getInfoByBarcode(i) {
+        var vals;
+        $.ajax({
+            async : false,
+            type : 'post',
+            url : 'get_info.php',
+            data: {'id': i},
+            success: function(response) {
+                vals = response;
+            }
+        });
+        return vals;
+    };
+
+    $(document).ready(function(){
+
+        $(document).keypress(function(e) {
+            if((e.which == 13) && !($("#submitdiv_above").is(":visible"))) {
+                $('#ident').click();
+            }
+        });
+
+
+        $('#ident').click(function(){
+            $.ajax({
+                type : 'post',
+                url : 'get_fields.php',
+                data: {'user': $('input[name="user"]').val()},
+                success : function(response) {
+
+                    if(response.indexOf('#') === -1) {
+                        alert(response);
+                    } else {
+
+                        var stuff = response.split('#');
+                        userId = parseInt(stuff[0]);
+                        var name = stuff[1];
+                        var vorname = stuff[2];
+                        var mail = stuff[3];
+                        var start = parseInt(stuff[4]);
+                        var end = parseInt(stuff[5]);
+                        var strasse = stuff[6];
+                        var ort = stuff[7];
+                        var plz = stuff[8];
+                        var tel1 = stuff[9];
+                        var userNameId = parseInt(stuff[10]);
+
+                        $( "#personal input[name='name']" ).val(unescape(name));
+                        $( "#personal input[name='vorname']" ).val(unescape(vorname));
+                        $( "#personal input[name='mail']" ).val(unescape(mail));
+                        $( "#personal input[name='strasse']" ).val(unescape(strasse));
+                        $( "#personal input[name='ort']" ).val(unescape(ort));
+                        $( "#personal input[name='plz']" ).val(unescape(plz));
+                        $( "#personal input[name='tel1']" ).val(unescape(tel1));
+                        
+                        
+                        $( "input#ident" ).remove();
+                        //$( "#user" ).append( '<br/>Name: <b>' + name + '</b><br/>' );
+                        $( "#user input[name='mail']").prop('disabled', true);
+
+                        $( "" )
+
+                        for (i = start; i < end+1; i++) {
+                            addArticle(i);
+                        }
+
+                        $( "#personal" ).show();
+                        $( "#submitdiv_above" ).show();
+                        $( "#submitdiv_below" ).show();
+
+                        $("#personal input[name='vorname']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
+                        $("#personal input[name='name']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
+                        $("#personal input[name='strasse']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
+                        $("#personal input[name='plz']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
+                        $("#personal input[name='ort']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
+                        $("#personal input[name='mail']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
+                        $("#personal input[name='tel1']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
+                        $("#articles input[name='artikel']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
+                        //$("#articles input[name='preis']").numeric({ allowMinus: false, allowThouSep: false, maxDecimalPlaces: 2});
+                        $("#articles input[name='preis']").number( true, 2, ',', '');
+                    }
+                },
+            });
+
+        });
+
+
+        function submit() {
+                        var values = {'id': userId.toString()};
+
+            values['name'] = escape($( "#personal input[name='name']" ).val());
+            values['vorname'] = escape($( "#personal input[name='vorname']" ).val());
+            values['mail'] = escape($( "#personal input[name='mail']" ).val());
+            values['strasse'] = escape($( "#personal input[name='strasse']" ).val());
+            values['ort'] = escape($( "#personal input[name='ort']" ).val());
+            values['plz'] = escape($( "#personal input[name='plz']" ).val());
+            values['tel1'] = escape($( "#personal input[name='tel1']" ).val());
+            if (!values['name'] || !values['vorname'] || !values['tel1']) {
+                window.alert("Vorname, Name und eine Telefonnummer sind Pflicht!");
+                return 1;
+            }
+
+            $("span.onearticle").each(function(idx) {
+                var barcode = $(this).find("input[name='barcode']").val();
+                var article = $(this).find("input[name='artikel']").val();
+                var groesse = $(this).find("select[name='groesse']").val();
+                var preis = $(this).find("input[name='preis']").val();
+                var farbe = $(this).find("input[name='farbe']").val();
+                values['barcode-' + idx] = barcode;
+                values['article-' + idx] = escape(article);
+                values['groesse-' + idx] = groesse;
+                values['preis-' + idx] = preis;
+                values['farbe-' + idx] = escape(farbe);
+            });
+
+            $.ajax({
+                type : 'post',
+                url : 'submit.php',
+                data: values,
+                async: false,
+                success : function(response) {
+                    alert(response);
+                },
+                error : function (jqXHR, textStatus, errorThrown) {
+                    alert("Daten aktualisieren hat nicht funktioniert! " + textStatus);
+                }
+            });
+        };
+
+        $('#submit_above, #submit_below').click(function(){
+            submit();
+        });
+
+        $('#submit_below_reload, #submit_above_reload').click(function(){
+            submit();
+            window.location.reload();
+        });
+                        
+                
+
+        var $loading = $('#ajaxLoader').hide();
+        $(document)
+            .ajaxStart(function () {
+            $loading.show();
+        })
+        .ajaxStop(function () {
+            $loading.hide();
+        });
+
+    })
+
+
+    </script>
+  </head>
+<style type="text/css">
+<!--
+#rechts {
+    float:right;
+    width: 35%;
+    height: 25%;
+    margin-left: 20px;
+} 
+-->
+</style>
+  
+<img id="rechts" src="pics/Logo.jpg" />
+
+  <body>
+    <h1>Apfelbäumchen-Bazar 2016 </h1> 
+
+    <div>
+        <form>
+            <div> <h2> Herzlich Willkommen auf dem Online-Formular des Apfelbäumchen-Bazars. Hier werden die zu verkaufenden Artikel erfasst. Eingaben sind 
+			bis Donnerstag 03.03.2016 - 24 Uhr möglich. Los geht’s!</h2> 
+<i> Hinweis: Die Eingabemaske ist (leider noch) nicht für mobile Endgeräte optimiert (z.B. Smartphone, Tablet).</i>
+		<ol>
+        		<li><b>Einloggen:</b> <br>
+			<ul>
+        			<li> Euer Benutzername steht unten rechts auf eurem Etikettenbogen. </li>
+			</ul>
+        		<li><b>Online Formular:</b>
+        		<ul>
+				<li>Bitte tragt eure Daten ein, es muss eine Telefonummer angegeben werden (Festnetz oder mobil). </li>
+				<li>Pro Verkäufernummer können maximal 50 Artikel in der Eingabemaske eingegeben werden (zwei Etikettenbögen).</li>
+				<li>Der Preis ist in EURO einzutragen; maximal in 10-Cent-Schritten. </li>
+				<li>Generell gilt, dass nicht alle Sonderzeichen zugelassen sind. Sie werden beim Tippen einfach nicht erkannt.</li>
+				<li>Werden im Online-Formular und auf dem Etikett unterschiedliche Preise eingegeben, wird die Ware im Zweifel nicht verkauft; ansonsten gilt der Preis auf dem Etikett.</li>				
+			</ul>
+			</li>
+	   		<li><b> Praktische Hinweise: </b>
+			<ul>
+				<li>Artikel in die Eingabemaske eingeben und parallel dazu das Etikett ergänzen (Preis und ggf. Größe).</li>
+				<li>Etikett mit Kugelschreiber bitte gut leserlich beschriften.</li>
+				<li>Die Artikelbezeichnung sollte eindeutig sein, damit eine Zuordnung im Zweifel möglich ist. </li>
+				<li>Die Artikelbezeichnung erscheint sowohl auf dem Abrechnungsbon für KäuferInnen als auch auf der Abrechnung für VerkäuferInnen.</li>
+				<li>Die Angabe der Farbe ist zur besseren Wiedererkennung empfehlenswert.</li>
+				<li>Nur für Kleidung wählt ihr bitte zur Angabe der Größe die Größen 50-176 aus dem Auswahlmenü. Für andere Artikel (Schlafsäcke, Bücher, Spielzeug, Sportgeräte, Mützen etc.) nutzt den Begriff "Sonstiges".</li>				
+			</ul>
+			</li>
+			<li><b>Speichern und Drucken: </b>
+			<ul>
+				<li> Oben und unten auf der Seite befindet sich der Button "Speichern" und "Drucken". Hier könnt ihr eure Liste abspeichern und ausdrucken.</li>
+				<li> Die gespeicherten Daten sind jederzeit aufzurufen und änderbar bis die Seite offline geht. (03.03.2016 - 24 Uhr) </li> 
+			</ul>
+			<li><b>Neue Liste: </b>
+			<ul>
+				<li> Habt ihr mehr als eine Liste, nutzt bitte diesen Button, um Artikel für eine weitere Liste einzugeben (neuer Benutzername).</li>
+			</ul>
+			</li>
+			<li><b>Folgendes solltet ihr noch wissen und beachten: </b>
+			<ul>
+				<li>Bei Fragen wendet euch bitte an das Bazar-Team unter <a href="mailto:bazar@apfelbaeumchen-nussloch.de">bazar@apfelbaeumchen-nussloch.de</a>  </li>
+				<li> Alle von euch eingegebenen Daten werden ausschließlich für Abrechnungszwecke im Zusammenhang mit dem Bazar genutzt und spätestens eine Woche nach dem Bazar unwiderruflich gelöscht.</li>
+			</ul>
+			</li>
+		</ol>
+
+</il>
+<p></p>
+<p></p>
+<p></p>
+<p></p>
+
+	    </div>
+
+            <div id="user">
+                Benutzername:
+                <input type="text" name="user">
+                <input type="button" onclick="" value="Zeig mir meine Liste." id='ident'>
+                <img src="pics/ajax-loader.gif" id="ajaxLoader"/>
+            </div>
+
+            <hr/>
+
+            <div id="submitdiv_above">
+                <input type="button" onclick="" value="Speichern" id="submit_above">
+                <input type="button" value="Drucken" onClick="javascript:window.print()">
+                <input type="button" value="Speichern und neue Liste eingeben" id="submit_above_reload" >
+            </div>
+            <div id="personal">
+                <table>
+                    <tr><td>Vorname:</td> <td><input type="text" name="vorname"></td></tr>
+
+                    <tr><td>Name:</td> <td><input type="text" name="name"></td></tr>
+
+                    <tr><td>Straße, Hausnummer:</td> <td><input type="text" name="strasse"></td></tr>
+
+                    <tr><td>PLZ:</td> <td><input type="text" name="plz"></td></tr>
+
+                    <tr><td>Ort:</td> <td><input type="text" name="ort"></td></tr>
+
+                    <tr><td>E-Mail:</td> <td><input type="text" name="mail"></td></tr>
+
+                    <tr><td>Telefonnummer:</td> <td><input type="text" name="tel1"></td></tr>
+
+                </table>
+            </div>
+
+            <hr/>
+
+            <div id="articles">
+            </div>
+            <div id="submitdiv_below">
+                <input type="button" onclick="" value="Speichern" id="submit_below">
+                <input type="button" value="Drucken" onClick="javascript:window.print()">
+		        <input type="button" value="Speichern und neue Liste eingeben" id="submit_below_reload">
+            </div>
+
+        </form>
+    </div>
+
+
+  </body>
+</html>
