@@ -22,7 +22,8 @@ mysqli_select_db($conn, $db);
 
 if (isset($_POST['user'])) {
 
-    $query = 'SELECT * FROM `verkaeufer` WHERE `user` LIKE "' . $_POST['user'] . '"';
+    $query = 'SELECT * FROM `verkaeufer` WHERE `user` LIKE BINARY "' . $_POST['user'] . '"';
+
     $result = mysqli_query($conn, $query);
     if (mysqli_num_rows($result)==0) {
         echo "Dieser Benutzername existiert nicht! Bitte wenden Sie sich an das Bazar-Team vom Apfelbäumchen.";
