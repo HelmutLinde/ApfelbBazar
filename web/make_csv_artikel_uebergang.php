@@ -3,7 +3,9 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-include("credentials.php");
+define('__ROOT__', dirname(__FILE__));
+require_once(__ROOT__ . '/credentials.php');
+
 $servername = SERVERNAME;
 $username = USERNAME;
 $password = PASSWORD;
