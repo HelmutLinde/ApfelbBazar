@@ -28,7 +28,7 @@ For KasseNummer = 1 To 8
 
       'Quelle öffnen
       URLSource=converttourl(sFolderUrl & sFileName)
-      oDocSource = StarDesktop.loadComponentFromURL(URLSource, "blank", 0, FileProperties())
+      oDocSource = StarDesktop.loadComponentFromURL(URLSource, "_blank", 0, FileProperties())
       oSheetSource=odocSource.sheets(0)
   
       ' Zeilen mit Inhalt kopieren
