@@ -30,7 +30,7 @@ if (isset($_POST['id'])) {
     }
 
     while ($row = mysqli_fetch_assoc($result)) {
-        echo $row['artikelbezeichnung'] . '#' . $row['groesse'] . '#' . $row['preis']  . '#' . $row['farbe'];
+        echo $row['artikelbezeichnung'] . '#' . $row['groesse'] . '#' . number_format($row['preis'], 2)  . '#' . $row['farbe'];
     }
     mysqli_free_result($result);
 }

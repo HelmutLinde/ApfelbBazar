@@ -2,3 +2,6 @@
 
 # don't have credentials public on github
 web/credentials.php
+
+# no tilde files
+*~

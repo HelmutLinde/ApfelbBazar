@@ -12,7 +12,7 @@
     </style>
     <script src="http://code.jquery.com/jquery.min.js"></script>
     <script type="text/javascript" src="jquery.alphanum.js"></script>
-    <script type="text/javascript" src="jquery.formatCurrency-1.4.0.min.js"></script>
+    <script type="text/javascript" src="Jquery-Price-Format/jquery.priceformat.min.js"></script>
     <script>
     var userId;
 
@@ -145,11 +145,9 @@
                         $("#personal input[name='mail']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
                         $("#personal input[name='tel1']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
                         $("#articles input[name='artikel']").alphanum({ disalow: "#'|", allow: "@.;-_,/" });
-
-                        $("#articles input[name='preis']").formatCurrency({decimalSymbol: ',', digitGroupSymbol: ' ', symbol: ''});
-                        $("#articles input[name='preis']").blur(function() {
-                            $("#articles input[name='preis']").formatCurrency({decimalSymbol: ',', digitGroupSymbol: ' ', symbol: ''});
-                        });
+                        //$("#articles input[name='preis']").numeric({ allowMinus: false, allowThouSep: false, maxDecimalPlaces: 2});
+                        //$("#articles input[name='preis']").number( true, 2, ',', '');
+                        $("#articles input[name='preis']").priceFormat({ prefix: '', centsSeparator: ',', thousandsSeparator: '' });
                     }
                 },
             });
@@ -158,7 +156,7 @@
 
 
         function submit() {
-            var values = {'id': userId.toString()};
+                        var values = {'id': userId.toString()};
 
             values['name'] = escape($( "#personal input[name='name']" ).val());
             values['vorname'] = escape($( "#personal input[name='vorname']" ).val());
@@ -198,8 +196,6 @@
                     alert("Daten aktualisieren hat nicht funktioniert! " + textStatus);
                 }
             });
-
-            return 0;
         };
 
         $('#submit_above, #submit_below').click(function(){
@@ -207,9 +203,8 @@
         });
 
         $('#submit_below_reload, #submit_above_reload').click(function(){
-            if (submit() == 0) {
-                window.location.reload();
-            }
+            submit();
+            window.location.reload();
         });
 
 
